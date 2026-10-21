@@ -1,89 +1,113 @@
 import base64
 import streamlit as st
+import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="Block Blast Game", page_icon="🧩", layout="centered"
 )
 
-
-def get_base64_of_bin_file(bin_file):
-  with open(bin_file, "rb") as f:
-    data = f.read()
-  return base64.b64encode(data).decode()
-
-
+# Chuyển ảnh IMG_0300.jpg sang dạng Base64 trực tiếp nếu có, hoặc tạo giao diện chơi kéo thả chuẩn
+image_base64_str = ""
 try:
-  img_base64 = get_base64_of_bin_file("IMG_0300.jpg")
-  page_bg_css = f"""
-    <style>
-    [data-testid="stAppViewContainer"] {{
-        background-image: url("data:image/jpeg;base64,{img_base64}");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    }}
-    [data-testid="stHeader"] {{
-        background-color: rgba(0, 0, 0, 0);
-    }}
-    h1, h2, h3, p, span, div {{
-        color: white !important;
-    }}
-    </style>
-    """
-  st.markdown(page_bg_css, unsafe_allow_html=True)
+  with open("IMG_0300.jpg", "rb") as image_file:
+    image_base64_str = base64.b64encode(image_file.read()).decode("utf-8")
 except Exception:
-  st.warning("Không thể tải ảnh nền.")
+  image_base64_str = ""
 
-if "board" not in st.session_state:
-  st.session_state.board = [[0 for _ in range(8)] for _ in range(8)]
-if "score" not in st.session_state:
-  st.session_state.score = 0
+# Mã nguồn HTML, CSS và JavaScript tạo game Block Blast kéo thả
+html_code = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {{
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }}
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1a1a2e;
+            background-image: {'url("data:image/jpeg;base64,' + image_base64_str + '")' if image_base64_str else 'none'};
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            color: white;
+        }}
+        
+        .header {{
+            margin-top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }}
+        
+        /* Bảng game 8x8 */
+        .board {{
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            gap: 4px;
+            width: 340px;
+            height: 340px;
+            background-color: rgba(10, 25, 47, 0.85);
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            margin-top: 15px;
+        }}
+        
+        .cell {{
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }}
+        
+        .cell.filled {{
+            background-color: #3182ce;
+            box-shadow: inset 0 0 5px rgba(255,255,255,0.5);
+        }}
+        
+        .cell.hover {{
+            background-color: rgba(255, 255, 255, 0.4);
+        }}
 
-st.title("🧩 Block Blast")
-st.write("Phiên bản Streamlit trên iPad!")
-st.metric(label="Điểm số", value=st.session_state.score)
+        /* Thùng chứa 3 khối ở dưới */
+        .shapes-container {{
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 360px;
+            height: 120px;
+            margin-top: 30px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 10px;
+        }}
 
-st.subheader("Bảng chơi")
-for r in range(8):
-  cols = st.columns(8)
-  for c in range(8):
-    cell_color = "🟦" if st.session_state.board[r][c] == 1 else "⬛"
-    cols[c].markdown(
-        f"<div style='text-align: center; font-size: 24px;'>{cell_color}</div>",
-        unsafe_allow_html=True,
-    )
+        .shape-slot {{
+            width: 90px;
+            height: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }}
 
-st.markdown("---")
-col1, col2 = st.columns(2)
-with col1:
-  shape_type = st.radio("Chọn khối:", ["Khối đơn (1 ô)", "Khối ngang (2 ô)"])
-with col2:
-  r_pos = st.number_input("Hàng (0-7)", 0, 7, 0)
-  c_pos = st.number_input("Cột (0-7)", 0, 7, 0)
+        .shape {{
+            display: grid;
+            gap: 2px;
+            cursor: grab;
+            touch-action: none;
+        }}
 
-if st.button("Đặt khối", type="primary"):
-  if shape_type == "Khối đơn (1 ô)":
-    if st.session_state.board[r_pos][c_pos] == 0:
-      st.session_state.board[r_pos][c_pos] = 1
-      st.session_state.score += 10
-      st.rerun()
-    else:
-      st.error("Ô đã có khối!")
-  elif shape_type == "Khối ngang (2 ô)":
-    if (
-        c_pos < 7
-        and st.session_state.board[r_pos][c_pos] == 0
-        and st.session_state.board[r_pos][c_pos + 1] == 0
-    ):
-      st.session_state.board[r_pos][c_pos] = 1
-      st.session_state.board[r_pos][c_pos + 1] = 1
-      st.session_state.score += 20
-      st.rerun()
-    else:
-      st.error("Không đủ chỗ!")
-
-if st.button("Làm mới bảng"):
-  st.session_state.board = [[0 for _ in range(8)] for _ in range(8)]
-  st.session_state.score = 0
-  st.rerun()
+        .shape-block {{
+            width: 22px;
+            height:
