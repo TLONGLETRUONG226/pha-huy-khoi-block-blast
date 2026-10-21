@@ -5,7 +5,6 @@ st.set_page_config(
     page_title="Block Blast Game", page_icon="🧩", layout="centered"
 )
 
-# Nhúng toàn bộ giao diện, hiệu ứng âm thanh, lời khen và logic game vào một chuỗi HTML duy nhất
 GAME_HTML = """
 <!DOCTYPE html>
 <html>
@@ -116,15 +115,15 @@ GAME_HTML = """
             justify-content: space-around;
             align-items: center;
             width: 310px;
-            height: 95px;
+            height: 100px;
             margin-top: 15px;
             background-color: rgba(0, 0, 0, 0.2);
             border-radius: 12px;
             padding: 5px;
         }
         .shape-slot {
-            width: 90px;
-            height: 85px;
+            width: 95px;
+            height: 90px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -136,8 +135,8 @@ GAME_HTML = """
             touch-action: none;
         }
         .shape-block {
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             border-radius: 3px;
             box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3);
         }
@@ -145,6 +144,9 @@ GAME_HTML = """
         .block-green { background-color: #48bb78; }
         .block-red { background-color: #f56565; }
         .block-purple { background-color: #9f7aea; }
+        .block-cyan { background-color: #38bdf8; }
+        .block-orange { background-color: #fb923c; }
+
     </style>
 </head>
 <body>
@@ -218,14 +220,34 @@ GAME_HTML = """
             setTimeout(() => banner.classList.remove('show'), 900);
         }
 
+        // Bổ sung đầy đủ các loại khối hình phong phú
         const SHAPES = [
+            // Khối đơn & Khối thẳng 2, 3, 4 ô
             { matrix: [[1]], color: 'block-yellow' },
             { matrix: [[1, 1]], color: 'block-green' },
+            { matrix: [[1], [1]], color: 'block-green' },
             { matrix: [[1, 1, 1]], color: 'block-red' },
             { matrix: [[1], [1], [1]], color: 'block-purple' },
+            { matrix: [[1, 1, 1, 1]], color: 'block-cyan' },
+            { matrix: [[1], [1], [1], [1]], color: 'block-cyan' },
+
+            // Khối Vuông 2x2 (4 ô) & 3x3 (9 ô)
             { matrix: [[1, 1], [1, 1]], color: 'block-yellow' },
-            { matrix: [[1, 0], [1, 0], [1, 1]], color: 'block-green' },
-            { matrix: [[1, 1, 1], [1, 0, 0]], color: 'block-red' }
+            { matrix: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], color: 'block-orange' },
+
+            // Khối L (3 ô dọc 2 ô ngang & 3 ô ngang 2 ô dọc)
+            { matrix: [[1, 0], [1, 0], [1, 1]], color: 'block-purple' },
+            { matrix: [[0, 1], [0, 1], [1, 1]], color: 'block-purple' },
+            { matrix: [[1, 1, 1], [1, 0, 0]], color: 'block-orange' },
+            { matrix: [[1, 1, 1], [0, 0, 1]], color: 'block-orange' },
+
+            // Khối T (3 ô ngang 2 ô dọc)
+            { matrix: [[1, 1, 1], [0, 1, 0]], color: 'block-green' },
+            { matrix: [[0, 1, 0], [1, 1, 1]], color: 'block-green' },
+
+            // Khối Ziczac (Z / S)
+            { matrix: [[1, 1, 0], [0, 1, 1]], color: 'block-red' },
+            { matrix: [[0, 1, 1], [1, 1, 0]], color: 'block-red' }
         ];
 
         let currentShapes = [null, null, null];
@@ -257,13 +279,16 @@ GAME_HTML = """
             
             const shapeEl = document.createElement('div');
             shapeEl.classList.add('shape');
-            shapeEl.style.gridTemplateColumns = `repeat(${shape.matrix[0].length}, 20px)`;
+            shapeEl.style.gridTemplateColumns = `repeat(${shape.matrix[0].length}, 16px)`;
             
             shape.matrix.forEach(row => {
                 row.forEach(val => {
                     const block = document.createElement('div');
                     if (val === 1) {
                         block.classList.add('shape-block', shape.color);
+                    } else {
+                        block.style.width = '16px';
+                        block.style.height = '16px';
                     }
                     shapeEl.appendChild(block);
                 });
@@ -397,54 +422,3 @@ GAME_HTML = """
         function checkAndClearLines() {
             let rowsToClear = [];
             let colsToClear = [];
-
-            for (let r = 0; r < BOARD_SIZE; r++) {
-                if (boardState[r].every(val => val === 1)) {
-                    rowsToClear.push(r);
-                }
-            }
-
-            for (let c = 0; c < BOARD_SIZE; c++) {
-                let full = true;
-                for (let r = 0; r < BOARD_SIZE; r++) {
-                    if (boardState[r][c] !== 1) full = false;
-                }
-                if (full) colsToClear.push(c);
-            }
-
-            if (rowsToClear.length > 0 || colsToClear.length > 0) {
-                playSound('clear');
-                showPraise();
-            }
-
-            rowsToClear.forEach(r => {
-                for (let c = 0; c < BOARD_SIZE; c++) {
-                    boardState[r][c] = 0;
-                    let cell = boardEl.children[r * BOARD_SIZE + c];
-                    cell.classList.add('clearing');
-                    setTimeout(() => cell.classList.remove('filled', 'clearing'), 400);
-                }
-                score += 100;
-            });
-
-            colsToClear.forEach(c => {
-                for (let r = 0; r < BOARD_SIZE; r++) {
-                    boardState[r][c] = 0;
-                    let cell = boardEl.children[r * BOARD_SIZE + c];
-                    cell.classList.add('clearing');
-                    setTimeout(() => cell.classList.remove('filled', 'clearing'), 400);
-                }
-                score += 100;
-            });
-
-            document.getElementById('score').innerText = score;
-        }
-
-        generateShapes();
-    </script>
-</body>
-</html>
-"""
-
-# Render game trực tiếp ra Streamlit
-components.html(GAME_HTML, height=600, scrolling=False)
