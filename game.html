@@ -11,7 +11,7 @@
         }
         body {
             margin: 0;
-            padding: 0;
+            padding: 5px;
             font-family: Arial, sans-serif;
             background-color: #2b82eb;
             display: flex;
@@ -24,31 +24,30 @@
             position: relative;
         }
         .header {
-            margin-top: 10px;
-            font-size: 28px;
+            margin-top: 5px;
+            font-size: 24px;
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         .start-btn {
-            margin-top: 8px;
-            padding: 6px 14px;
+            margin: 5px 0;
+            padding: 6px 12px;
             background-color: #f59e0b;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 15px;
+            border-radius: 6px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
         
-        /* Bảng lời khen nổi giữa màn hình */
         #praise-banner {
             position: absolute;
-            top: 40%;
+            top: 45%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0);
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 900;
             color: #ffeb3b;
             text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
@@ -67,19 +66,19 @@
             display: grid;
             grid-template-columns: repeat(8, 1fr);
             grid-template-rows: repeat(8, 1fr);
-            gap: 4px;
-            width: 320px;
-            height: 320px;
+            gap: 3px;
+            width: 300px;
+            height: 300px;
             background-color: #1b498c;
-            border-radius: 12px;
-            padding: 8px;
+            border-radius: 10px;
+            padding: 6px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-            margin-top: 10px;
+            margin-top: 5px;
             position: relative;
         }
         .cell {
             background-color: rgba(255, 255, 255, 0.08);
-            border-radius: 4px;
+            border-radius: 3px;
         }
         .cell.filled {
             background-color: #3182ce;
@@ -93,7 +92,6 @@
             background-color: rgba(239, 68, 68, 0.4) !important;
         }
 
-        /* Hiệu ứng nổ tung khi phá hủy hàng/cột */
         .cell.clearing {
             animation: explodeCell 0.4s ease-out forwards;
         }
@@ -103,20 +101,21 @@
             100% { transform: scale(0); background-color: rgba(255,255,255,0.08); }
         }
 
+        /* Khung chứa 3 khối thu nhỏ gọn gàng ở dưới */
         .shapes-container {
             display: flex;
             justify-content: space-around;
             align-items: center;
-            width: 320px;
-            height: 100px;
-            margin-top: 15px;
-            background-color: rgba(0, 0, 0, 0.15);
-            border-radius: 12px;
+            width: 300px;
+            height: 90px;
+            margin-top: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
             padding: 5px;
         }
         .shape-slot {
-            width: 90px;
-            height: 90px;
+            width: 85px;
+            height: 80px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -128,8 +127,8 @@
             touch-action: none;
         }
         .shape-block {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border-radius: 3px;
             box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3);
         }
@@ -144,7 +143,6 @@
     <div class="header">Điểm: <span id="score">0</span></div>
     <button class="start-btn" id="startBtn" onclick="startGame()">▶ Chạm để Bật âm thanh</button>
 
-    <!-- Khung hiển thị lời khen -->
     <div id="praise-banner">Tuyệt vời!</div>
 
     <div class="board" id="board"></div>
@@ -161,13 +159,7 @@
         let score = 0;
         let audioCtx = null;
 
-        const praises = [
-            "🌟 Quá đỉnh!", 
-            "🔥 Tuyệt vời!", 
-            "🚀 Xuất sắc!", 
-            "💎 Siêu sao!", 
-            "🎉 Combo hoàn hảo!"
-        ];
+        const praises = ["🌟 Quá đỉnh!", "🔥 Tuyệt vời!", "🚀 Xuất sắc!", "💎 Siêu sao!", "🎉 Combo hoàn hảo!"];
 
         function startGame() {
             if (!audioCtx) {
@@ -179,7 +171,6 @@
             document.getElementById('startBtn').style.display = 'none';
         }
 
-        // Âm thanh sinh động qua Web Audio API
         function playSound(type) {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
@@ -196,7 +187,6 @@
                 osc.start();
                 osc.stop(audioCtx.currentTime + 0.1);
             } else if (type === 'clear') {
-                // Nhạc reo vui chúc mừng (Arpeggio)
                 let now = audioCtx.currentTime;
                 [400, 600, 800, 1050].forEach((freq, index) => {
                     let o = audioCtx.createOscillator();
@@ -206,4 +196,20 @@
                     o.type = 'triangle';
                     o.frequency.setValueAtTime(freq, now + index * 0.08);
                     g.gain.setValueAtTime(0.3, now + index * 0.08);
-                    g.gain.exponentialRampToValueAtTime(0.01, now + index * 0
+                    g.gain.exponentialRampToValueAtTime(0.01, now + index * 0.08 + 0.15);
+                    o.start(now + index * 0.08);
+                    o.stop(now + index * 0.08 + 0.15);
+                });
+            }
+        }
+
+        function showPraise() {
+            const banner = document.getElementById('praise-banner');
+            banner.innerText = praises[Math.floor(Math.random() * praises.length)];
+            banner.classList.add('show');
+            setTimeout(() => banner.classList.remove('show'), 900);
+        }
+
+        const SHAPES = [
+            { matrix: [[1]], color: 'block-yellow' },
+            { matrix: [[1, 1]], color: 'block-green' },
