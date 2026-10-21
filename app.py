@@ -1,10 +1,3 @@
-Lỗi xảy ra thường là do khi sao chép và dán toàn bộ đoạn mã Base64 quá dài, một số ký tự bị đứt quãng hoặc tràn dòng khiến trình biên dịch Python báo lỗi.
-
-Để khắc phục hoàn toàn và đảm bảo chạy mượt mà ngay trên iPad mà không sợ lỗi, chúng ta sẽ **cắt ngắn chuỗi Base64 thành các đoạn nhỏ và nối lại** trong Python.
-
-Bạn hãy copy đoạn code siêu gọn gàng và an toàn tuyệt đối dưới đây, dán đè vào file **`app.py`** trên GitHub nhé:
-
-```python
 import streamlit as st
 import streamlit.components.v1 as components
 
