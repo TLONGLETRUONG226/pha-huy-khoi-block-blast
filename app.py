@@ -5,7 +5,7 @@ st.set_page_config(
     page_title="Block Blast Game", page_icon="🧩", layout="centered"
 )
 
-html_code = "\n".join([
+GAME_HTML = "\n".join([
     "<!DOCTYPE html>",
     "<html>",
     "<head>",
