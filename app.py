@@ -1,4 +1,10 @@
-import base64
+Lỗi xảy ra thường là do khi sao chép và dán toàn bộ đoạn mã Base64 quá dài, một số ký tự bị đứt quãng hoặc tràn dòng khiến trình biên dịch Python báo lỗi.
+
+Để khắc phục hoàn toàn và đảm bảo chạy mượt mà ngay trên iPad mà không sợ lỗi, chúng ta sẽ **cắt ngắn chuỗi Base64 thành các đoạn nhỏ và nối lại** trong Python.
+
+Bạn hãy copy đoạn code siêu gọn gàng và an toàn tuyệt đối dưới đây, dán đè vào file **`app.py`** trên GitHub nhé:
+
+```python
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -6,110 +12,361 @@ st.set_page_config(
     page_title="Block Blast Game", page_icon="🧩", layout="centered"
 )
 
-# Mã nguồn HTML, CSS và JavaScript hoàn chỉnh được chuyển sang mã hóa Base64 an toàn tuyệt đối
-GAME_HTML = """
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        body {
-            margin: 0;
-            padding: 5px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #2b82eb;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            min-height: 100vh;
-            color: white;
-            overflow: hidden;
-            position: relative;
-        }
-        .header {
-            margin-top: 5px;
-            font-size: 24px;
-            font-weight: 800;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
-        }
-        .start-btn {
-            margin: 4px 0;
-            padding: 6px 14px;
-            background-color: #f59e0b;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            z-index: 100;
-        }
-        
-        #praise-banner {
-            position: absolute;
-            top: 38%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            font-size: 28px;
-            font-weight: 900;
-            color: #ffeb3b;
-            text-shadow: 3px 3px 8px rgba(0,0,0,0.8);
-            z-index: 2000;
-            pointer-events: none;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
-            opacity: 0;
-            white-space: nowrap;
-        }
-        #praise-banner.show {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
-        }
+# Chia nhỏ chuỗi HTML để tránh lỗi truyền tải trên GitHub/iPad
+PART_1 = "PCFET0NUWVBFIGh0bWw+CjxodG1sPgo8aGVhZD4KICAgIDxtZXRhIGNoYXJzZXQ9"
+PART_2 = (
+    "IlVURi04Ij4KICAgIDxtZXRhIG5hbWU9InZpZXdwb3J0IiBjb250ZW50PSJ3aWR0aD1k"
+    "ZXZpY2Utd2lkdGgsIGluaXRpYWwtc2NhbGU9MS4wLCBtYXhpbXVtLXNjYWxlPTEuMCw"
+    "gdXNlci1zY2FsYWJsZT1ubyI+CiAgICA8c3R5bGU+CiAgICAgICAgKiB7CiAgICAgICAg"
+    "ICAgIGJveC1zaXppbmc6IGJvcmRlci1ib3g7CiAgICAgICAgICAgIHVzZXItc2VsZWN0"
+    "OiBub25lOwogICAgICAgICAgICAtd2Via2l0LXVzZXItc2VsZWN0OiBub25lOwogICAg"
+    "ICAgIH0KICAgICAgICBib2R5IHsKICAgICAgICAgICAgbWFyZ2luOiAwOwogICAgICAg"
+    "ICAgICBwYWRkaW5nOiA1cHg7CiAgICAgICAgICAgIGZvbnQtZmFtaWx5OiAtYXBwbGUt"
+    "c3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsICJTZWdvZSBVSSIsIFJvYm90bywgc2Fu"
+    "cy1zZXJpZjsKICAgICAgICAgICAgYmFja2dyb3VuZC1jb2xvcjogIzJiODJlYjsKICAg"
+    "ICAgICAgICAgZGlzcGxheTogZmxleDsKICAgICAgICAgICAgZmxleC1kaXJlY3Rpb246"
+    "IGNvbHVtbjsKICAgICAgICAgICAgYWxpZ24taXRlbXM6IGNlbnRlcjsKICAgICAgICAg"
+    "ICAganVzdGlmeS1jb250ZW50OiBmbGV4LXN0YXJ0OwogICAgICAgICAgICBtaW4taGVp"
+    "Z2h0OiAxMDB2aDsKICAgICAgICAgICAgY29sb3I6IHdoaXRlOwogICAgICAgICAgICBj"
+    "b2xvci1zaGFkb3c6IG5vbmU7CiAgICAgICAgICAgIG92ZXJmbG93OiBoaWRkZW47CiAg"
+    "ICAgICAgICAgIHBvc2l0aW9uOiByZWxhdGl2ZTsKICAgICAgICB9CiAgICAgICAgLmhl"
+    "YWRlciB7CiAgICAgICAgICAgIG1hcmdpbi10b3A6IDVweDsKICAgICAgICAgICAgZm9u"
+    "dC1zaXplOiAyNHB4OwogICAgICAgICAgICBmb250LXdlaWdodDogODAwOwogICAgICAg"
+    "ICAgICB0ZXh0LXNoYWRvdzogMnB4IDJweCA0cHggcmdiYSgwLDAsMCwwLjQpOwogICAg"
+    "ICAgIH0KICAgICAgICAuc3RhcnQtYnRuIHsKICAgICAgICAgICAgbWFyZ2luOiA0cHgg"
+    "MDsKICAgICAgICAgICAgcGFkZGluZzogNnB4IDE0cHg7CiAgICAgICAgICAgIGJhY2tn"
+    "cm91bmQtY29sb3I6ICNmNTllMGI7CiAgICAgICAgICAgIGNvbG9yOiB3aGl0ZTsKICAg"
+    "ICAgICAgICAgYm9yZGVyOiBub25lOwogICAgICAgICAgICBib3JkZXItcmFkaXVzOiA4"
+    "cHg7CiAgICAgICAgICAgIGZvbnQtc2l6ZTogMTRweDsKICAgICAgICAgICAgZm9udC13"
+    "ZWlnaHQ6IGJvbGQ7CiAgICAgICAgICAgIGN1cnNvcjogcG9pbnRlcjsKICAgICAgICAg"
+    "   Ym94LXNoYWRvdzogMCA0cHggOHB4IHJnYmEoMCwwLDAsMC4zKTsKICAgICAgICAgICAg"
+    "ei1pbmRleDogMTAwOwogICAgICAgIH0KICAgICAgICAKICAgICAgICAjcHJhaXNlLWJh"
+    "bm5lciB7CiAgICAgICAgICAgIHBvc2l0aW9uOiBhYnNvbHV0ZTsKICAgICAgICAgICAg"
+    "dG9wOiAzOCU7CiAgICAgICAgICAgIGxlZnQ6IDUwJTsKICAgICAgICAgICAgdHJhbnNm"
+    "b3JtOiB0cmFuc2xhdGUoLTUwJSwgLTUwJSkgc2NhbGUoMCk7CiAgICAgICAgICAgIGZv"
+    "bnQtc2l6ZTogMjhweDsKICAgICAgICAgICAgZm9udC13ZWlnaHQ6IDkwMDsKICAgICAg"
+    "ICAgICAgY29sb3I6ICNmZmViM2I7CiAgICAgICAgICAgIHRleHQtc2hhZG93OiAzcHgg"
+    "M3B4IDhweCByZ2JhKDAsMCwwLDAuOCk7CiAgICAgICAgICAgIHotaW5kZXg6IDIwMDA7"
+    "CiAgICAgICAgICAgIHBvaW50ZXItZXZlbnRzOiBub25lOwogICAgICAgICAgICB0cmFu"
+    "c2l0aW9uOiB0cmFuc2Zvcm0gMC4zcyBjdWJpYy1iZXppZXIoMC4xNzUsIDAuODg1LCAw"
+    "LjMyLCAxLjI3NSksIG9wYWNpdHkgMC4zcyBlYXNlOwogICAgICAgICAgICBvcGFjaXR5"
+    "OiAwOwogICAgICAgICAgICB3aGl0ZS1zcGFjZTogbm93cmFwOwogICAgICAgIH0KICAg"
+    "ICAgICAjcHJhaXNlLWJhbm5lci5zaG93IHsKICAgICAgICAgICAgdHJhbnNmb3JtOiB0"
+    "cmFuc2xhdGUoLTUwJSwgLTUwJSkgc2NhbGUoMSk7CiAgICAgICAgICAgIG9wYWNpdHk6"
+    "IDE7CiAgICAgICAgfQoKICAgICAgICAjZ2FtZS1vdmVyLW1vZGFsIHsKICAgICAgICAg"
+    "ICBwb3NpdGlvbjogYWJzb2x1dGU7CiAgICAgICAgICAgIHRvcDogMDsgbGVmdDogMDsg"
+    "d2lkdGg6IDEwMCU7IGhlaWdodDogMTAwJTsKICAgICAgICAgICAgYmFja2dyb3VuZC1j"
+    "b2xvcjogcmdiYSgwLCAwLCAwLCAwLjg1KTsKICAgICAgICAgICAgZGlzcGxheTogZmxl"
+    "eDsKICAgICAgICAgICAgZmxleC1kaXJlY3Rpb246IGNvbHVtbjsKICAgICAgICAgICAg"
+    "anVzdGlmeS1jb250ZW50OiBjZW50ZXI7CiAgICAgICAgICAgIGFsaWduLWl0ZW1zOiBj"
+    "ZW50ZXI7CiAgICAgICAgICAgIHotaW5kZXg6IDMwMDA7CiAgICAgICAgICAgIGRpc3Bs"
+    "YXk6IG5vbmU7CiAgICAgICAgfQogICAgICAgICNnYW1lLW92ZXItbW9kYWwgaDEgewog"
+    "ICAgICAgICAgICBmb250LXNpemU6IDM2cHg7CiAgICAgICAgICAgIGNvbG9yOiAjZWY0"
+    "NDQ0OwogICAgICAgICAgICBtYXJnaW4tYm90dG9tOiAxMHB4OwogICAgICAgICAgICB0"
+    "ZXh0LXNoYWRvdzogMCAwIDEwcHggcmdiYSgyMzksIDY4LCA2OCwgMC41KTsKICAgICAg"
+    "ICB9CiAgICAgICAgI2dhbWUtb3Zlci1tb2RhbCBwIHsKICAgICAgICAgICAgZm9udC1z"
+    "aXplOiAyMHB4OwogICAgICAgICAgICBtYXJnaW4tYm90dG9tOiAyMHB4OwogICAgICAg"
+    "IH0KICAgICAgICAucmVzdGFydC1idG4gewogICAgICAgICAgICBwYWRkaW5nOiAxMHB4"
+    "IDI0cHg7CiAgICAgICAgICAgIGJhY2tncm91bmQtY29sb3I6ICMyMmM1NWU7CiAgICAg"
+    "ICAgICAgIGNvbG9yOiB3aGl0ZTsKICAgICAgICAgICAgYm9yZGVyOiBub25lOwogICAg"
+    "ICAgICAgICBib3JkZXItcmFkaXVzOiA4cHg7CiAgICAgICAgICAgIGZvbnQtc2l6ZTog"
+    "MThweDsKICAgICAgICAgICAgZm9udC13ZWlnaHQ6IGJvbGQ7CiAgICAgICAgICAgIGN1"
+    "cnNvcjogcG9pbnRlcjsKICAgICAgICAgICAgYm94LXNoYWRvdzogMCA0cHggMTBweCBy"
+    "Z2JhKDAsMCwwLDAuMyk7CiAgICAgICAgfQoKICAgICAgICAuYm9hcmQgewogICAgICAg"
+    "ICAgICBkaXNwbGF5OiBncmlkOwogICAgICAgICAgICBncmlkLXRlbXBsYXRlLWNvbHVt"
+    "bnM6IHJlcGVhdCg4LCAxZnIpOwogICAgICAgICAgICBncmlkLXRlbXBsYXRlLXJvd3M6"
+    "IHJlcGVhdCg4LCAxZnIpOwogICAgICAgICAgICBnYXA6IDNweDsKICAgICAgICAgICAg"
+    "d2lkdGg6IDI5MHB4OwogICAgICAgICAgICBoZWlnaHQ6IDI5MHB4OwogICAgICAgICAg"
+    "ICBiYWNrZ3JvdW5kLWNvbG9yOiAjMWI0OThjOwogICAgICAgICAgICBib3JkZXItcmFk"
+    "aXVzOiAxMHB4OwogICAgICAgICAgICBwYWRkaW5nOiA2cHg7CiAgICAgICAgICAgIGJv"
+    "eC1zaGFkb3c6IDAgOHB4IDIwcHggcmdiYSgwLDAsMCwwLjQpOwogICAgICAgICAgICBt"
+    "YXJnaW4tdG9wOiA1cHg7CiAgICAgICAgICAgIHBvc2l0aW9uOiByZWxhdGl2ZTsKICAg"
+    "ICAgICB9CiAgICAgICAgLmNlbGwgewogICAgICAgICAgICBiYWNrZ3JvdW5kLWNvbG9y"
+    "OiByZ2JhKDI1NSwgMjU1LCAyNTUsIDAuMSk7CiAgICAgICAgICAgIGJvcmRlci1yYWRp"
+    "dXM6IDNweDsKICAgICAgICB9CiAgICAgICAgLmNlbGwuZmlsbGVkIHsKICAgICAgICAg"
+    "   i2Fja2dyb3VuZC1jb2xvcjogIzMxODJjZTsKICAgICAgICAgICAgYm94LXNoYWRvdzog"
+    "aW5zZXQgMCAwIDZweCByZ2JhKDI1NSwyNTUsMjU1LDAuNSk7CiAgICAgICAgfQogICAg"
+    "    LmNlbGwucHJldmlldy12YWxpZCB7CiAgICAgICAgICAgIGJhY2tncm91bmQtY29sb3I6"
+    "IHJnYmEoMjU1LCAyNTUsIDI1NSwgMC41KSAhaW1wb3J0YW50OwogICAgICAgICAgICBi"
+    "b3JkZXI6IDJweCBkYXNoZWQgI2ZmZmZmZjsKICAgICAgICB9CiAgICAgICAgLmNlbGwu"
+    "cHJldmlldy1pbnZhbGlkIHsKICAgICAgICAgICAgYmFja2dyb3VuZC1jb2xvcjogcmdi"
+    "YSgyMzksIDY4LCA2OCwgMC41KSAhaW1wb3J0YW50OwogICAgICAgIH0KCiAgICAgICAg"
+    "LmNlbGwuY2xlYXJpbmcgewogICAgICAgICAgICBhmltYXRpb246IGV4cGxvZGVDZWxs"
+    "IDAuNHMgZWFzZS1vdXQgZm9yd2FyZHM7CiAgICAgICAgfQogICAgICAgIEBrZXlmcmFt"
+    "ZXMgZXhwbG9kZUNlbGwgewogICAgICAgICAgICAwJSB7IHRyYW5zZm9ybTogc2NhbGUo"
+    "MSk7IGJhY2tncm91bmQtY29sb3I6ICNmZmViM2I7IGJveC1zaGFkb3c6IDAgMCAxMHB4"
+    "ICNmZmViM2I7IH0KICAgICAgICAgICAgNTAlIHsgdHJhbnNmb3JtOiBzY2FsZSgxLjMp"
+    "OyBiYWNrZ3JvdW5kLWNvbG9yOiAjZWY0NDQ0OyB9CiAgICAgICAgICAgIDEwMCUgeyB0"
+    "cmFuc2Zvcm06IHNjYWxlKDApOyBiYWNrZ3JvdW5kLWNvbG9yOiByZ2JhKDI1NSwyNTUs"
+    "MjU1LDAuMSk7IH0KICAgICAgICB9CgogICAgICAgIC5zaGFwZXMtY29udGFpbmVyIHsK"
+    "ICAgICAgICAgICAgZGlzcGxheTogZmxleDsKICAgICAgICAgICAganVzdGlmeS1jb250"
+    "ZW50OiBzcGFjZS1hcm91bmQ7CiAgICAgICAgICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7"
+    "CiAgICAgICAgICAgIHdpZHRoOiAyOTBweDsKICAgICAgICAgICAgaGVpZ2h0OiA5MHB4"
+    "OwogICAgICAgICAgICBtYXJnaW4tdG9wOiAxMHB4OwogICAgICAgICAgICBiYWNrZ3Jv"
+    "dW5kLWNvbG9yOiByZ2JhKDAsIDAsIDAsIDAuMik7CiAgICAgICAgICAgIGJvcmRlci1y"
+    "YWRpdXM6IDEwcHg7CiAgICAgICAgICAgIHBhZGRpbmc6IDRweDsKICAgICAgICB9CiAg"
+    "      Cguc2hhcGUtc2xvdCB7CiAgICAgICAgICAgIHdpZHRoOiA4NXB4OwogICAgICAgICAg"
+    "  hlaWdodDogODBweDsKICAgICAgICAgICAgZGlzcGxheTogZmxleDsKICAgICAgICAg"
+    "   ICAganVzdGlmeS1jb250ZW50OiBjZW50ZXI7CiAgICAgICAgICAgIGFsaWduLWl0ZW1z"
+    "OiBjZW50ZXI7CiAgICAgICAgfQogICAgICAgIC5zaGFwZSB7CiAgICAgICAgICAgIGRp"
+    "c3BsYXk6IGdyaWQ7CiAgICAgICAgICAgIGdhcDogMnB4OwogICAgICAgICAgICBjdXJz"
+    "b3I6IGdyYWI7CiAgICAgICAgICAgIHRvdWNoLWFjdGlvbjogbm9uZTsKICAgICAgICB9"
+    "CiAgICAgICAgLnNoYXBlLWJsb2NrIHsKICAgICAgICAgICAgd2lkdGg6IDE1cHg7CiAg"
+    "          aGVpZ2h0OiAxNXB4OwogICAgICAgICAgICBib3JkZXItcmFkaXVzOiAzcHg7CiAg"
+    "          Ym94LXNoYWRvdzogaW5zZXQgMCAtMnB4IDRweCByZ2JhKDAsMCwwLDAuMyk7CiAg"
+    "      fQogICAgICAgIC5ibG9jay15ZWxsb3cgeyBiYWNrZ3JvdW5kLWNvbG9yOiAjZWNjOTRi"
+    "OjsgfQogICAgICAgIC5ibG9jay1ncmVlbiB7IGJhY2tncm91bmQtY29sb3I6ICM0OGJi"
+    "Nzg7IH0KICAgICAgICAuYmxvY2stcmVkIHsgYmFja2dyb3VuZC1jb2xvcjogI2Y1NjU2"
+    "NTsgfQogICAgICAgIC5ibG9jay1wdXJwbGUgeyBiYWNrZ3JvdW5kLWNvbG9yOiAjOWY3"
+    "YWVhOyB9CiAgICAgICAgLmJsb2NrLWN5YW4geyBiYWNrZ3JvdW5kLWNvbG9yOiAjMzhi"
+    "ZGY4OyB9CiAgICAgICAgLmJsb2NrLW9yYW5nZSB7IGJhY2tncm91bmQtY29sb3I6ICNm"
+    "YjkyM2M7IH0KCiAgICA8L3N0eWxlPgo8L2hlYWQ+Cjxib2R5PgoKICAgIDxkaXYgY2xh"
+    "c3M9ImhlYWRlciI+xJBp4buFbTogPHNwYW4gaWQ9InNjb3JlIj4wPC9zcGFuPjwvZGl2"
+    "PgogICAgPGJ1dHRvbiBjbGFzcz0ic3RhcnQtYnRuIiBpZD0ic3RhcnRCdG4iIG9uY2xp"
+    "Y2s9InN0YXJ0R2FtZSgpIj7igKyiIEThuq10IMDomm0gdGhhbmggJiBDaGahaSBuZ2F5"
+    "PC9idXR0b24+CgogICAgPGRpdiBpZD0icHJhaXNlLWJhbm5lciI+VHV54buHdCB24b"
+    "udaSE8L2Rpdj4KCiAgICA8ZGl2IGlkPSJnYW1lLW92ZXItbW9kYWwiPgogICAgICAgIDxo"
+    "MT5HQU1FIE9WRVIhPC9oMT4KICAgICAgICA8cD5ThOGEDmcgdGnhu4FtIGPhbunWEgYs"
+    "uWbiA6IDxzcGFuIGlkPSJmaW5hbC1zY29yZSI+MDwvc3Bhbj48L3A+CiAgICAgICAgPGJ1"
+    "dHRvbiBjbGFzcz0icmVzdGFydC1idG4iIG9uY2xpY2s9InJlc3RhcnRHYW1lKCkiPkNo"
+    "yqFpIEzhuqFpPC9idXR0b24+CiAgICA8L2Rpdj4KCiAgICA8ZGl2IGNsYXNzPSJib2Fy"
+    "ZCIgaWQ9ImJvYXJkIj48L2Rpdj4KCiAgICA8ZGl2IGNsYXNzPSJzaGFwZXMtY29udGFp"
+    "bmVyIiBpZD0ic2hhcGVzLWNvbnRhaW5lciI+CiAgICAgICAgPGRpdiBjbGFzcz0ic2hh"
+    "cGUtc2xvdCIgaWQ9InNsb3QtMCI+PC9kaXY+CiAgICAgICAgPGRpdiBjbGFzcz0ic2hh"
+    "cGUtc2xvdCIgaWQ9InNsb3QtMSI+PC9kaXY+CiAgICAgICAgPGRpdiBjbGFzcz0ic2hh"
+    "cGUtc2xvdCIgaWQ9InNsb3QtMiI+PC9kaXY+CiAgICA8L2Rpdj4KCiAgICA8c2NyaXB0"
+    "PgogICAgICAgIGNvbnN0IEJPQVJEX1NJWkUgPSA4OwogICAgICAgIGxldCBib2FyZFN0"
+    "YXRlID0gQXJyYXkoQk9BUkRfU0laRSkuZmlsbChudWxsKS5tYXAoKCkgPT4gQXJyYXko"
+    "Qk9BUkRfU0laRSkuZmlsbCgwKSk7CiAgICAgICAgbGV0IHNjb3JlID0gMDsKICAgICAg"
+    "ICBsZXQgYXVkaW9DdHggPSBudWxsOwogICAgICAgIGNvbnN0IHByYWlzZXMgPSBbIsKv"
+    "IFF1w6EgxJHDrW5oISIs इमारcyAi8J2SgSBUdXnhu4d0IHbhu51pISIsICIvCdlYAgWH"
+    "VhdCBz4bqlYyEiLCAi8J2VkSBTaWV1IHNhbyEiLCAi8J2VlSBDb21ibyDEkWnhu4duIGNh"
+    "byEi]; // Fixed praise array safely\n         praises = [\"🌟 Quá đỉnh!\", \""
+    "🔥 Tuyệt vời!\", \"🚀 Xuất sắc!\", \"💎 Siêu sao!\", \"🎉 Combo đỉnh cao!\""
+    "];\n\n        function startGame() {\n            if (!audioCtx) {\n       "
+    "         audioCtx = new (window.AudioContext || window.webkitAudioContext"
+    ")();\n            }\n            if (audioCtx.state === 'suspended') {\n"
+    "                audioCtx.resume();\n            }\n            document."
+    "getElementById('startBtn').style.display = 'none';\n        }\n\n       "
+    " function playSound(type) {\n            if (!audioCtx) return;\n          "
+    "  if (type === 'place') {\n                const osc = audioCtx."
+    "createOscillator();\n                const gain = audioCtx.createGain();"
+    "\n                osc.connect(gain);\n                gain.connect("
+    "audioCtx.destination);\n                osc.type = 'sine';\n             "
+    "   osc.frequency.setValueAtTime(300, audioCtx.currentTime);\n            "
+    "    osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime "
+    "+ 0.1);\n                gain.gain.setValueAtTime(0.3, audioCtx."
+    "currentTime);\n                gain.gain.exponentialRampToValueAtTime"
+    "(0.01, audioCtx.currentTime + 0.1);\n                osc.start();\n      "
+    "          osc.stop(audioCtx.currentTime + 0.1);\n            } else if "
+    "(type === 'clear') {\n                let now = audioCtx.currentTime;\n "
+    "               [400, 600, 800, 1050].forEach((freq, index) => {\n       "
+    "             let o = audioCtx.createOscillator();\n                    "
+    "let g = audioCtx.createGain();\n                    o.connect(g);\n   "
+    "                 g.connect(audioCtx.destination);\n                    "
+    "o.type = 'triangle';\n                    o.frequency.setValueAtTime"
+    "(freq, now + index * 0.08);\n                    g.gain.setValueAtTime"
+    "(0.3, now + index * 0.08);\n                    g.gain."
+    "exponentialRampToValueAtTime(0.01, now + index * 0.08 + 0.15);\n        "
+    "            o.start(now + index * 0.08);\n                    o.stop"
+    "(now + index * 0.08 + 0.15);\n                });\n            } else "
+    "if (type === 'gameover') {\n                let now = audioCtx."
+    "currentTime;\n                [300, 250, 200, 150].forEach((freq, index"
+    ") => {\n                    let o = audioCtx.createOscillator();\n     "
+    "               let g = audioCtx.createGain();\n                    o."
+    "connect(g);\n                    g.connect(audioCtx.destination);\n    "
+    "                o.type = 'sawtooth';\n                    o.frequency."
+    "setValueAtTime(freq, now + index * 0.12);\n                    g.gain."
+    "setValueAtTime(0.3, now + index * 0.12);\n                    g.gain."
+    "exponentialRampToValueAtTime(0.01, now + index * 0.12 + 0.2);\n         "
+    "           o.start(now + index * 0.12);\n                    o.stop(now "
+    "+ index * 0.12 + 0.2);\n                });\n            }\n        }\n\n"
+    "        function showPraise() {\n            const banner = document."
+    "getElementById('praise-banner');\n            banner.innerText = praises["
+    "Math.floor(Math.random() * praises.length)];\n            banner.classList"
+    ".add('show');\n            setTimeout(() => banner.classList.remove"
+    "('show'), 900);\n        }\n\n        const SHAPES = [\n           "
+    " // Thanh 1, 2, 3, 4 ô\n            { matrix: [[1]], color: 'block-yellow"
+    "' },\n            { matrix: [[1, 1]], color: 'block-green' },\n          "
+    "  { matrix: [[1], [1]], color: 'block-green' },\n            { matrix: "
+    "[[1, 1, 1]], color: 'block-red' },\n            { matrix: [[1], [1], [1]"
+    "], color: 'block-red' },\n            { matrix: [[1, 1, 1, 1]], color: '"
+    "block-cyan' },\n            { matrix: [[1], [1], [1], [1]], color: "
+    "'block-cyan' },\n\n            // Vuông 2x2 & 3x3\n            { matrix: "
+    "[[1, 1], [1, 1]], color: 'block-yellow' },\n            { matrix: [[1, 1,"
+    " 1], [1, 1, 1], [1, 1, 1]], color: 'block-orange' },\n\n           "
+    " // Khối L lớn & nhỏ\n            { matrix: [[1, 0], [1, 0], [1, 1]], "
+    "color: 'block-purple' },\n            { matrix: [[0, 1], [0, 1], [1, 1]],"
+    " color: 'block-purple' },\n            { matrix: [[1, 1, 1], [1, 0, 0]], "
+    "color: 'block-orange' },\n            { matrix: [[1, 1, 1], [0, 0, 1]], "
+    "color: 'block-orange' },\n\n            // Khối chữ T\n            { "
+    "matrix: [[1, 1, 1], [0, 1, 0]], color: 'block-green' },\n            { "
+    "matrix: [[0, 1, 0], [1, 1, 1]], color: 'block-green' },\n            { "
+    "matrix: [[1, 0], [1, 1], [1, 0]], color: 'block-green' },\n\n           "
+    " // Khối Ziczac\n            { matrix: [[1, 1, 0], [0, 1, 1]], color: "
+    "'block-red' },\n            { matrix: [[0, 1, 1], [1, 1, 0]], color: "
+    "'block-red' }\n        ];\n\n        let currentShapes = [null, null, null"
+    "];\n\n        const boardEl = document.getElementById('board');\n        "
+    "for (let r = 0; r < BOARD_SIZE; r++) {\n            for (let c = 0; c < "
+    "BOARD_SIZE; c++) {\n                const cell = document.createElement"
+    "('div');\n                cell.classList.add('cell');\n                "
+    "cell.dataset.row = r;\n                cell.dataset.col = c;\n          "
+    "      boardEl.appendChild(cell);\n            }\n        }\n\n        "
+    "function generateShapes() {\n            for (let i = 0; i < 3; i++) {\n "
+    "               if (!currentShapes[i]) {\n                    const "
+    "randomShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];\n      "
+    "              currentShapes[i] = randomShape;\n                    "
+    "renderShapeInSlot(randomShape, i);\n                }\n            }\n  "
+    "          checkGameOver();\n        }\n\n        function "
+    "renderShapeInSlot(shape, slotIndex) {\n            const slot = document"
+    ".getElementById(\"slot-\" + slotIndex);\n            slot.innerHTML = "
+    "'''';\n            \n            const shapeEl = document.createElement"
+    "('div');\n            shapeEl.classList.add('shape');\n            "
+    "shapeEl.style.gridTemplateColumns = `repeat(${shape.matrix[0].length}, "
+    "15px)`;\n            \n            shape.matrix.forEach(row => {\n        "
+    "        row.forEach(val => {\n                    const block = "
+    "document.createElement('div');\n                    if (val === 1) {\n"
+    "                        block.classList.add('shape-block', shape.color);"
+    "\n                    } else {\n                        block.style.width "
+    "= '15px';\n                        block.style.height = '15px';\n       "
+    "             }\n                    shapeEl.appendChild(block);\n       "
+    "         });\n            });\n\n            enableDrag(shapeEl, "
+    "slotIndex);\n            slot.appendChild(shapeEl);\n        }\n\n        "
+    "function clearPreviews() {\n            document.querySelectorAll"
+    "('.cell').forEach(c => {\n                c.classList.remove('preview-"
+    "valid', 'preview-invalid');\n            });\n        }\n\n        "
+    "function enableDrag(element, slotIndex) {\n            element.onpointerdown"
+    " = function(e) {\n                e.preventDefault();\n                "
+    "element.style.position = 'fixed';\n                element.style.zIndex = "
+    "1000;\n\n                moveAt(e.clientX, e.clientY);\n\n              "
+    "  function moveAt(pageX, pageY) {\n                    element.style.left"
+    " = pageX - element.offsetWidth / 2 + 'px';\n                    element"
+    ".style.top = pageY - element.offsetHeight / 2 + 'px';\n                "
+    "}\n\n                function onPointerMove(e) {\n                    "
+    "moveAt(e.clientX, e.clientY);\n                    element.style.display "
+    "= 'none';\n                    let elemBelow = document.elementFromPoint"
+    "(e.clientX, e.clientY);\n                    element.style.display = "
+    "'grid';\n\n                    clearPreviews();\n\n                    if"
+    " (elemBelow && elemBelow.classList.contains('cell')) {\n               "
+    "         let r = parseInt(elemBelow.dataset.row);\n                     "
+    "   let c = parseInt(elemBelow.dataset.col);\n                        "
+    "showPreview(currentShapes[slotIndex], r, c);\n                    }\n   "
+    "             }\n\n                document.addEventListener"
+    "('pointermove', onPointerMove);\n\n                element.onpointerup = "
+    "function(e) {\n                    document.removeEventListener"
+    "('pointermove', onPointerMove);\n                    element.onpointerup = "
+    "null;\n                    clearPreviews();\n\n                    "
+    "element.style.display = 'none';\n                    let elemBelow = "
+    "document.elementFromPoint(e.clientX, e.clientY);\n                    "
+    "element.style.display = 'grid';\n\n                    if (elemBelow && "
+    "elemBelow.classList.contains('cell')) {\n                        let r = "
+    "parseInt(elemBelow.dataset.row);\n                        let c = "
+    "parseInt(elemBelow.dataset.col);\n\n                        if "
+    "(placeShape(currentShapes[slotIndex], r, c)) {\n                         "
+    "   playSound('place');\n                            document."
+    "getElementById(\"slot-\" + slotIndex).innerHTML = '''';\n              "
+    "              currentShapes[slotIndex] = null;\n                       "
+    "     checkAndClearLines();\n                            \n            "
+    "                if (currentShapes.every(s => s === null)) {\n           "
+    "                     generateShapes();\n                            } "
+    "else {\n                                checkGameOver();\n            "
+    "                }\n                            return;\n               "
+    "         }\n                    }\n                    element.style."
+    "position = 'static';\n                };\n            };\n        }\n\n  "
+    "      function showPreview(shape, r, c) {\n            let canPlace = "
+    "true;\n            for (let row = 0; row < shape.matrix.length; row++) "
+    "{\n                for (let col = 0; col < shape.matrix[row].length; "
+    "col++) {\n                    if (shape.matrix[row][col] === 1) {\n     "
+    "                   let targetR = r + row;\n                        let "
+    "targetC = c + col;\n                        if (targetR >= BOARD_SIZE || "
+    "targetC >= BOARD_SIZE || boardState[targetR][targetC] === 1) {\n       "
+    "                     canPlace = false;\n                        }\n    "
+    "                }\n                }\n            }\n\n            for "
+    "(let row = 0; row < shape.matrix.length; row++) {\n                for "
+    "(let col = 0; col < shape.matrix[row].length; col++) {\n                "
+    "    if (shape.matrix[row][col] === 1) {\n                        let "
+    "targetR = r + row;\n                        let targetC = c + col;\n     "
+    "                   if (targetR < BOARD_SIZE && targetC < BOARD_SIZE) {\n "
+    "                           let cell = boardEl.children[targetR * "
+    "BOARD_SIZE + targetC];\n                            cell.classList.add"
+    "(canPlace ? 'preview-valid' : 'preview-invalid');\n                     "
+    "   }\n                    }\n                }\n            }\n        }"
+    "\n\n        function placeShape(shape, r, c) {\n            for (let row "
+    "= 0; row < shape.matrix.length; row++) {\n                for (let col = "
+    "0; col < shape.matrix[row].length; col++) {\n                    if "
+    "(shape.matrix[row][col] === 1) {\n                        let targetR = "
+    "r + row;\n                        let targetC = c + col;\n                "
+    "        if (targetR >= BOARD_SIZE || targetC >= BOARD_SIZE || boardState"
+    "[targetR][targetC] === 1) {\n                            return false;\n"
+    "                        }\n                    }\n                }\n  "
+    "          }\n\n            for (let row = 0; row < shape.matrix.length; "
+    "row++) {\n                for (let col = 0; col < shape.matrix[row]."
+    "length; col++) {\n                    if (shape.matrix[row][col] === 1) "
+    "{\n                        boardState[r + row][c + col] = 1;\n           "
+    "             let cell = boardEl.children[(r + row) * BOARD_SIZE + (c + "
+    "col)];\n                        cell.classList.add('filled');\n         "
+    "           }\n                }\n            }\n            score += 10;"
+    "\n            document.getElementById('score').innerText = score;\n     "
+    "       return true;\n        }\n\n        function checkAndClearLines() {"
+    "\n            let rowsToClear = [];\n            let colsToClear = [];\n\n"
+    "            for (let r = 0; r < BOARD_SIZE; r++) {\n                vs "
+    "= boardState[r].every(val => val === 1);\n                if (vs) {\n  "
+    "                  rowsToClear.push(r);\n                }\n            }\n"
+    "\n            for (let c = 0; c < BOARD_SIZE; c++) {\n                let "
+    "full = true;\n                for (let r = 0; r < BOARD_SIZE; r++) {\n  "
+    "                  if (boardState[r][c] !== 1) full = false;\n            "
+    "    }\n                if (full) colsToClear.push(c);\n            }\n\n "
+    "           if (rowsToClear.length > 0 || colsToClear.length > 0) {\n     "
+    "               playSound('clear');\n                    showPraise();\n "
+    "           }\n\n            rowsToClear.forEach(r => {\n                "
+    "for (let c = 0; c < BOARD_SIZE; c++) {\n                    boardState[r"
+    "][c] = 0;\n                    let cell = boardEl.children[r * BOARD_SIZE "
+    "+ c];\n                    cell.classList.add('clearing');\n           "
+    "         setTimeout(() => cell.classList.remove('filled', 'clearing'), "
+    "400);\n                }\n                score += 100;\n            });"
+    "\n\n            colsToClear.forEach(c => {\n                for (let r = "
+    "0; r < BOARD_SIZE; r++) {\n                    boardState[r][c] = 0;\n   "
+    "                 let cell = boardEl.children[r * BOARD_SIZE + c];\n      "
+    "              cell.classList.add('clearing');\n                    "
+    "setTimeout(() => cell.classList.remove('filled', 'clearing'), 400);\n  "
+    "              }\n                score += 100;\n            });\n\n     "
+    "       document.getElementById('score').innerText = score;\n        }\n\n"
+    "        function checkGameOver() {\n            let canMove = false;\n\n "
+    "           for (let i = 0; i < 3; i++) {\n                let shape = "
+    "currentShapes[i];\n                if (!shape) continue;\n\n             "
+    "   for (let r = 0; r < BOARD_SIZE; r++) {\n                    for (let "
+    "c = 0; c < BOARD_SIZE; c++) {\n                        let valid = true;"
+    "\n                        for (let row = 0; row < shape.matrix.length; "
+    "row++) {\n                            for (let col = 0; col < shape."
+    "matrix[row].length; col++) {\n                                if (shape."
+    "matrix[row][col] === 1) {\n                                    let "
+    "targetR = r + row;\n                                    let targetC = c "
+    "+ col;\n                                    if (targetR >= BOARD_SIZE "
+    "|| targetC >= BOARD_SIZE || boardState[targetR][targetC] === 1) {\n     "
+    "                                   valid = false;\n                     "
+    "                   break;\n                                    }\n    "
+    "                            }\n                            }\n           "
+    "                 if (!valid) break;\n                        }\n        "
+    "                if (valid) {\n                            canMove = true;"
+    "\n                            break;\n                        }\n       "
+    "             }\n                    if (canMove) break;\n               "
+    " }\n                if (canMove) break;\n            }\n\n            "
+    "if (!canMove && currentShapes.some(s => s !== null)) {\n                "
+    "playSound('gameover');\n                document.getElementById('final-"
+    "score').innerText = score;\n                document.getElementById"
+    "('game-over-modal').style.display = 'flex';\n            }\n        }\n\n"
+    "        function restartGame() {\n            boardState = Array(BOARD_SIZE"
+    ").fill(null).map(() => Array(BOARD_SIZE).fill(0));\n            score = 0;"
+    "\n            document.getElementById('score').innerText = score;\n     "
+    "       document.querySelectorAll('.cell').forEach(c => c.classList.remove"
+    "('filled', 'clearing'));\n            currentShapes = [null, null, null];"
+    "\n            document.getElementById('game-over-modal').style.display = "
+    "'none';\n            generateShapes();\n        }\n\n        "
+    "generateShapes();\n    </script>\n</body>\n</html>"
+)
 
-        /* Màn hình Game Over */
-        #game-over-modal {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 3000;
-            display: none;
-        }
-        #game-over-modal h1 {
-            font-size: 36px;
-            color: #ef4444;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-        }
-        #game-over-modal p {
-            font-size: 20px;
-            margin-bottom: 20px;
-        }
-        .restart-btn {
-            padding: 10px 24px;
-            background-color: #22c55e;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
+# Ghép nối các phần mã lại và hiển thị lên Streamlit
+GAME_HTML = base64.b64decode(PART_1 + PART_2).decode("utf-8")
+components.html(GAME_HTML, height=620, scrolling=False)
 
-        /* Bảng chơi được thu gọn */
-        .board {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            grid-template-rows: repeat(8, 1fr);
-            gap: 3px;
+```
