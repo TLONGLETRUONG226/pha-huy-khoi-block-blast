@@ -1,14 +1,9 @@
-import base64
 import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="Block Blast Game", page_icon="🧩", layout="centered"
 )
-
-# Chuyển đổi video bạn gửi thành dữ liệu âm thanh dạng Base64 nhúng chuẩn xác
-# (Bạn có thể tải file âm thanh mp3 tiếng cười đó lên repo hoặc dùng chuỗi nhúng trực tiếp dưới đây)
-LAUGH_AUDIO_B64 = ""  # Sẽ được nạp trực tiếp vào Audio object bên dưới bằng JS/DataURI
 
 GAME_HTML = "\n".join([
     "<!DOCTYPE html>",
@@ -84,7 +79,6 @@ GAME_HTML = "\n".join([
     "        let score = 0;",
     "        let audioCtx = null;",
     "        ",
-    "        // Tích hợp trực tiếp audio tiếng cười từ file mẫu vào ứng dụng qua Web Audio API / HTML5 Audio",
     "        const laughAudio = new Audio('https://www.myinstants.com/media/sounds/funny-laugh-sound-effect.mp3');",
     "        laughAudio.volume = 1.0;",
     "        ",
@@ -92,16 +86,13 @@ GAME_HTML = "\n".join([
     "        function launchGame() {",
     "            if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }",
     "            if (audioCtx.state === 'suspended') { audioCtx.resume(); }",
-    "            // Kích hoạt ngầm audio để iOS/iPad cho phép phát tự động sau này",
     "            laughAudio.play().then(() => { laughAudio.pause(); laughAudio.currentTime = 0; }).catch(e => {});",
     "            document.getElementById('start-menu').style.display = 'none';",
     "        }",
     "        function playSound(type) {",
     "            if (type === 'gameover') {",
-    "                // Phát chính xác âm thanh tiếng cười hả hê y chang video mẫu",
     "                laughAudio.currentTime = 0;",
     "                laughAudio.play().catch(e => {",
-    "                    // Fallback sang Web Audio API nếu bị chặn",
     "                    if (!audioCtx) return;",
     "                    let now = audioCtx.currentTime;",
     "                    [480, 600, 480, 600, 520, 640, 380].forEach((freq, idx) => {",
@@ -379,17 +370,16 @@ GAME_HTML = "\n".join([
     "        function restartGame() {",
     "            boardState = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));",
     "            score = 0;",
-    "`,
-    '            document.getElementById("score").innerText = score;',
-    '            document.querySelectorAll(".cell").forEach(c => c.classList.remove("filled", "clearing"));',
-    '            currentShapes = [null, null, null];',
-    '            document.getElementById("game-over-modal").style.display = "none";',
-    '            generateShapes();',
-    '        }',
-    '        generateShapes();',
-    '    </script>',
-    '</body>',
-    '</html>',
+    "            document.getElementById('score').innerText = score;",
+    "            document.querySelectorAll('.cell').forEach(c => c.classList.remove('filled', 'clearing'));",
+    "            currentShapes = [null, null, null];",
+    "            document.getElementById('game-over-modal').style.display = 'none';",
+    "            generateShapes();",
+    "        }",
+    "        generateShapes();",
+    "    </script>",
+    "</body>",
+    "</html>"
 ])
 
 components.html(GAME_HTML, height=620, scrolling=False)
