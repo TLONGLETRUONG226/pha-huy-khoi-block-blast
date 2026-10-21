@@ -112,7 +112,6 @@ GAME_HTML = "\n".join([
     "                    o.start(now + index * 0.07); o.stop(now + index * 0.07 + 0.15);",
     "                });",
     "            } else if (type === 'gameover') {",
-    "                // Tái tạo chính xác điệu cười "khà khà" lém lỉnh, khiêu khích y chang video mẫu",
     "                let now = audioCtx.currentTime;",
     "                const laughNotes = [",
     "                    { time: 0.00, freq: 520, dur: 0.12 },",
