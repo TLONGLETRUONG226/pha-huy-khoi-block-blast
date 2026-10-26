@@ -114,7 +114,7 @@ GAME_HTML = """
             border-radius: 8px;
         }
 
-        /* Vibrant Block Color Palettes with 3D Gradients */
+        /* Block Color Themes */
         .theme-cyan { background: linear-gradient(135deg, #38bdf8, #0284c7); border: 1px solid #7dd3fc; }
         .theme-yellow { background: linear-gradient(135deg, #facc15, #ca8a04); border: 1px solid #fef08a; }
         .theme-red { background: linear-gradient(135deg, #f87171, #dc2626); border: 1px solid #fca5a5; }
@@ -172,7 +172,7 @@ GAME_HTML = """
             box-shadow: inset 0 1.5px 3px rgba(255,255,255,0.6), inset 0 -2px 4px rgba(0,0,0,0.4);
         }
 
-        /* Start Menu Modal */
+        /* Modals */
         #start-menu {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -209,7 +209,6 @@ GAME_HTML = """
         }
         .btn-primary:active { transform: scale(0.95); }
 
-        /* Game Over Modal */
         #game-over-modal {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -226,23 +225,23 @@ GAME_HTML = """
         }
         #game-over-modal h1 {
             font-size: 44px;
-            color: #ef4444;
+            color: #94a3b8;
             margin-bottom: 8px;
-            text-shadow: 0 0 30px rgba(239, 68, 68, 0.8);
+            text-shadow: 0 0 30px rgba(148, 163, 184, 0.6);
             font-weight: 950;
         }
-        .taunt-msg {
-            font-size: 22px;
-            color: #facc15;
+        .sad-msg {
+            font-size: 20px;
+            color: #cbd5e1;
             margin-bottom: 20px;
-            font-weight: 800;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            font-weight: 600;
             line-height: 1.4;
+            font-style: italic;
         }
         #game-over-modal p {
             font-size: 18px;
             margin-bottom: 25px;
-            color: #cbd5e1;
+            color: #94a3b8;
             font-weight: 600;
         }
         .btn-restart {
@@ -282,9 +281,9 @@ GAME_HTML = """
     <div id="praise-banner">Tuyệt vời!</div>
 
     <div id="game-over-modal">
-        <h1>GAME OVER!</h1>
-        <div class="taunt-msg">chơi gà quá, chơi lạii đi hahaa 🤪</div>
-        <p>Tổng điểm của bạn: <span id="final-score" style="color:#38bdf8; font-weight:800;">0</span></p>
+        <h1>GAME OVER</h1>
+        <div class="sad-msg">Tiếc quá... Bạn đã cố gắng hết sức rồi! 😢</div>
+        <p>Tổng điểm: <span id="final-score" style="color:#38bdf8; font-weight:800;">0</span></p>
         <button class="btn-restart" onclick="restartGame()">Thử Lại Ngay</button>
     </div>
 
@@ -309,7 +308,6 @@ GAME_HTML = """
 
         const praises = ["🌟 Quá đỉnh!", "🔥 Tuyệt vời!", "🚀 Xuất sắc!", "💎 Siêu sao!", "🎉 Combo đỉnh cao!"];
 
-        // Unlock audio context silently without playing laugh
         function launchGame() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -320,7 +318,7 @@ GAME_HTML = """
             document.getElementById('start-menu').style.display = 'none';
         }
 
-        // Web Audio Synthesizer
+        // Web Audio Synthesizer: Nhạc buồn u sầu khi Game Over
         function playSound(type) {
             if (!audioCtx) return;
             let now = audioCtx.currentTime;
@@ -353,25 +351,29 @@ GAME_HTML = """
                 });
             } 
             else if (type === 'gameover') {
-                // Tiếng cười khà khà lém lỉnh, khiêu khích CHỈ PHÁT KHI THUA GAME
-                const laughNotes = [
-                    { t: 0.00, f: 520, d: 0.12 },
-                    { t: 0.13, f: 650, d: 0.12 },
-                    { t: 0.26, f: 520, d: 0.12 },
-                    { t: 0.39, f: 680, d: 0.14 },
-                    { t: 0.55, f: 550, d: 0.12 },
-                    { t: 0.70, f: 720, d: 0.16 },
-                    { t: 0.88, f: 400, d: 0.28 }
+                // Chuỗi nốt nhạc buồn (Minor Melody tha thiết u sầu)
+                const sadMelody = [
+                    { t: 0.00, f: 392.00, d: 0.45 }, // G4
+                    { t: 0.40, f: 349.23, d: 0.45 }, // F4
+                    { t: 0.80, f: 311.13, d: 0.50 }, // Eb4
+                    { t: 1.25, f: 293.66, d: 0.55 }, // D4
+                    { t: 1.75, f: 261.63, d: 0.90 }  // C4 (Nốt trầm sâu thẳm)
                 ];
-                laughNotes.forEach(note => {
+
+                sadMelody.forEach(note => {
                     let o = audioCtx.createOscillator();
                     let g = audioCtx.createGain();
                     o.connect(g);
                     g.connect(audioCtx.destination);
-                    o.type = 'sawtooth';
+                    
+                    // Tiếng piano/organ u sầu ngân vang
+                    o.type = 'sine';
                     o.frequency.setValueAtTime(note.f, now + note.t);
-                    g.gain.setValueAtTime(0.45, now + note.t);
+
+                    g.gain.setValueAtTime(0.0, now + note.t);
+                    g.gain.linearRampToValueAtTime(0.35, now + note.t + 0.05);
                     g.gain.exponentialRampToValueAtTime(0.001, now + note.t + note.d);
+
                     o.start(now + note.t);
                     o.stop(now + note.t + note.d);
                 });
