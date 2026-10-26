@@ -318,7 +318,7 @@ GAME_HTML = """
             document.getElementById('start-menu').style.display = 'none';
         }
 
-        // Web Audio Synthesizer: Nhạc buồn u sầu khi Game Over
+        // Web Audio Synthesizer: Điệu nhạc buồn Piano & Violin da diết
         function playSound(type) {
             if (!audioCtx) return;
             let now = audioCtx.currentTime;
@@ -351,13 +351,14 @@ GAME_HTML = """
                 });
             } 
             else if (type === 'gameover') {
-                // Chuỗi nốt nhạc buồn (Minor Melody tha thiết u sầu)
+                // Nhạc buồn Violin & Piano thổn thức u sầu (G minor slow cadence)
                 const sadMelody = [
-                    { t: 0.00, f: 392.00, d: 0.45 }, // G4
-                    { t: 0.40, f: 349.23, d: 0.45 }, // F4
-                    { t: 0.80, f: 311.13, d: 0.50 }, // Eb4
-                    { t: 1.25, f: 293.66, d: 0.55 }, // D4
-                    { t: 1.75, f: 261.63, d: 0.90 }  // C4 (Nốt trầm sâu thẳm)
+                    { t: 0.00, f: 392.00, d: 0.6, type: 'triangle' }, // G4
+                    { t: 0.50, f: 349.23, d: 0.6, type: 'triangle' }, // F4
+                    { t: 1.00, f: 311.13, d: 0.7, type: 'triangle' }, // Eb4
+                    { t: 1.60, f: 293.66, d: 0.7, type: 'triangle' }, // D4
+                    { t: 2.20, f: 261.63, d: 0.8, type: 'triangle' }, // C4
+                    { t: 2.90, f: 196.00, d: 1.4, type: 'sine' }     // G3 (Trầm lắng đọng)
                 ];
 
                 sadMelody.forEach(note => {
@@ -366,12 +367,11 @@ GAME_HTML = """
                     o.connect(g);
                     g.connect(audioCtx.destination);
                     
-                    // Tiếng piano/organ u sầu ngân vang
-                    o.type = 'sine';
+                    o.type = note.type;
                     o.frequency.setValueAtTime(note.f, now + note.t);
 
                     g.gain.setValueAtTime(0.0, now + note.t);
-                    g.gain.linearRampToValueAtTime(0.35, now + note.t + 0.05);
+                    g.gain.linearRampToValueAtTime(0.3, now + note.t + 0.08);
                     g.gain.exponentialRampToValueAtTime(0.001, now + note.t + note.d);
 
                     o.start(now + note.t);
